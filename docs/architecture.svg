@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 460" role="img"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 540" role="img"
      aria-labelledby="title desc" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
   <title id="title">who-sentinel-mcp architecture</title>
-  <desc id="desc">An MCP host calls who-sentinel-mcp tools over stdio. The server caches and rate-limits requests to the WHO GHO and DON public APIs and returns JSON with a CC BY 4.0 attribution line.</desc>
+  <desc id="desc">An MCP host calls who-sentinel-mcp tools over stdio. The server caches and rate-limits requests to the WHO GHO, WHO DON, and HDX HAPI (INFORM Risk Index) public APIs and returns JSON with a CC BY 4.0 attribution line.</desc>
 
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
@@ -61,7 +61,7 @@
   <rect x="310" y="202" width="120" height="22" rx="6" class="pill"/>
   <text x="370" y="217" text-anchor="middle" class="pill-txt">compare_gho_countries</text>
   <rect x="438" y="202" width="132" height="22" rx="6" class="pill"/>
-  <text x="504" y="217" text-anchor="middle" class="pill-txt">spatial_vulnerability_index</text>
+  <text x="504" y="217" text-anchor="middle" class="pill-txt">country_risk_index</text>
 
   <!-- Middleware section -->
   <text x="310" y="252" class="badge">MIDDLEWARE</text>
@@ -90,14 +90,24 @@
   <text x="760" y="193" text-anchor="middle" class="pill-txt">country / dimensions</text>
 
   <g filter="url(#cardShadow)">
-    <rect x="670" y="240" width="180" height="130" rx="14" class="card card-who"/>
+    <rect x="670" y="240" width="180" height="110" rx="14" class="card card-who"/>
   </g>
-  <text x="760" y="268" text-anchor="middle" class="heading">WHO DON</text>
-  <text x="760" y="286" text-anchor="middle" class="sub">OData &#8226; public</text>
-  <rect x="690" y="300" width="140" height="22" rx="6" class="pill"/>
-  <text x="760" y="315" text-anchor="middle" class="pill-txt">outbreak news items</text>
-  <rect x="690" y="328" width="140" height="22" rx="6" class="pill"/>
-  <text x="760" y="343" text-anchor="middle" class="pill-txt">narrative HTML</text>
+  <text x="760" y="266" text-anchor="middle" class="heading">WHO DON</text>
+  <text x="760" y="282" text-anchor="middle" class="sub">OData &#8226; public</text>
+  <rect x="690" y="294" width="140" height="22" rx="6" class="pill"/>
+  <text x="760" y="309" text-anchor="middle" class="pill-txt">outbreak news items</text>
+  <rect x="690" y="320" width="140" height="22" rx="6" class="pill"/>
+  <text x="760" y="335" text-anchor="middle" class="pill-txt">narrative HTML</text>
+
+  <g filter="url(#cardShadow)">
+    <rect x="670" y="370" width="180" height="110" rx="14" class="card card-who"/>
+  </g>
+  <text x="760" y="396" text-anchor="middle" class="heading">HDX HAPI</text>
+  <text x="760" y="412" text-anchor="middle" class="sub">INFORM Risk Index</text>
+  <rect x="690" y="424" width="140" height="22" rx="6" class="pill"/>
+  <text x="760" y="439" text-anchor="middle" class="pill-txt">national risk scores</text>
+  <rect x="690" y="450" width="140" height="22" rx="6" class="pill"/>
+  <text x="760" y="465" text-anchor="middle" class="pill-txt">risk class &#8226; rank</text>
 
   <!-- Edges: host <-> server -->
   <path d="M 210 188 H 290" class="edge" marker-end="url(#arrow)"/>
@@ -106,15 +116,18 @@
   <path d="M 290 230 H 210" class="edge" marker-end="url(#arrow)"/>
   <text x="250" y="222" text-anchor="middle" class="edge-lbl">JSON result</text>
 
-  <!-- Edges: server <-> WHO -->
+  <!-- Edges: server <-> upstreams -->
   <path d="M 590 170 H 670" class="edge" marker-end="url(#arrow)"/>
   <text x="630" y="162" text-anchor="middle" class="edge-lbl">HTTPS &#8226; OData GET</text>
 
-  <path d="M 670 305 H 590" class="edge" marker-end="url(#arrow)"/>
-  <text x="630" y="297" text-anchor="middle" class="edge-lbl">cached + retried</text>
+  <path d="M 670 295 H 590" class="edge" marker-end="url(#arrow)"/>
+  <text x="630" y="287" text-anchor="middle" class="edge-lbl">cached + retried</text>
+
+  <path d="M 590 425 H 670" class="edge" marker-end="url(#arrow)"/>
+  <text x="630" y="417" text-anchor="middle" class="edge-lbl">JSON GET (CC BY 4.0)</text>
 
   <!-- Footer -->
-  <text x="440" y="430" text-anchor="middle" class="footer">
+  <text x="440" y="510" text-anchor="middle" class="footer">
     Independent open-source project &#8226; not affiliated with the World Health Organization
   </text>
 </svg>

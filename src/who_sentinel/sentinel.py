@@ -1,17 +1,66 @@
 from __future__ import annotations
 
+import re
 import statistics
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any
 
 from who_sentinel.clients.don import DonClient, filter_outbreak_rows, outbreak_summary_row
 from who_sentinel.clients.gho import GhoClient
 from who_sentinel.countries import resolve_country
+from who_sentinel.country_aliases import country_text_hints
 from who_sentinel.disease_hints import (
     curated_groups_matched_count,
     curated_hints_for_query,
     merge_indicator_candidates,
 )
+
+# Words too generic to be evidence that an IndicatorName actually covers a disease query.
+_DISEASE_QUERY_STOPWORDS = frozenset({
+    "the", "and", "for", "with", "from", "into", "out", "outbreak", "outbreaks",
+    "case", "cases", "disease", "diseases", "epidemic", "epidemics", "pandemic",
+    "incidence", "rate", "rates", "data", "infection", "infections", "report",
+    "reports", "death", "deaths", "country", "countries", "year", "years",
+})
+
+
+def _disease_query_tokens(disease_q: str) -> list[str]:
+    """Alphabetic tokens >=3 chars from the disease query, minus generic stopwords."""
+    raw = re.findall(r"[a-zA-Z]+", (disease_q or "").lower())
+    return [t for t in raw if len(t) >= 3 and t not in _DISEASE_QUERY_STOPWORDS]
+
+
+def _validate_indicator_for_disease(
+    meta: dict[str, Any] | None,
+    disease_q: str,
+) -> dict[str, Any]:
+    tokens = _disease_query_tokens(disease_q)
+    name = ((meta or {}).get("IndicatorName") or "").lower()
+
+    if not tokens:
+        return {
+            "confidence": "unknown",
+            "reason": "Disease query has no distinctive tokens to compare against IndicatorName.",
+            "matched_disease_tokens": [],
+        }
+    if not name:
+        return {
+            "confidence": "unknown",
+            "reason": "No IndicatorName available from GHO metadata.",
+            "matched_disease_tokens": [],
+        }
+
+    matched = [t for t in tokens if t in name]
+    if matched:
+        return {"confidence": "ok", "matched_disease_tokens": matched}
+    return {
+        "confidence": "warning",
+        "reason": (
+            "IndicatorName shares no distinctive keywords with your disease query. "
+            "Confirm this is the right code, or re-call with confirm_indicator=True."
+        ),
+        "matched_disease_tokens": [],
+        "indicator_name": (meta or {}).get("IndicatorName"),
+    }
 
 
 def _pct_deviation(latest: float, baseline_mean: float) -> float | None:
@@ -35,6 +84,7 @@ def run_surveillance_synthesis(
     *,
     prior_years_for_baseline: int | None = None,
     baseline_latest_year: int | None = None,
+    confirm_indicator: bool = False,
 ) -> dict[str, Any]:
     """Merge DON recent narrative signal with GHO historical baseline statistics."""
 
@@ -78,6 +128,28 @@ def run_surveillance_synthesis(
 
     code = indicator_code.strip()
     meta = gho.get_indicator_meta(code)
+
+    code_validation = _validate_indicator_for_disease(meta, disease_q)
+    if code_validation["confidence"] == "warning" and not confirm_indicator:
+        curated = curated_hints_for_query(disease_q)
+        search_rows = gho.search_indicators(disease_q, top=15)
+        merged = merge_indicator_candidates(curated, search_rows, search_limit=40)
+        return {
+            "status": "indicator_validation_warning",
+            "country_resolution": cc,
+            "disease_query": disease_q,
+            "indicator_code": code,
+            "indicator": meta,
+            "code_provenance": "user_supplied",
+            "code_validation": code_validation,
+            "indicator_candidates": merged,
+            "message": (
+                "Refused to compute a baseline because the chosen IndicatorName does not "
+                "appear to match your disease query. Re-call with confirm_indicator=True "
+                "to override, or pick a different IndicatorCode from indicator_candidates."
+            ),
+        }
+
     series = gho.fetch_country_year_series(code, iso3, max_points=30)
     numeric_rows = [r for r in series if r.get("numeric_value") is not None]
     if len(numeric_rows) < 2:
@@ -85,6 +157,8 @@ def run_surveillance_synthesis(
             "status": "insufficient_gho",
             "country_resolution": cc,
             "indicator": meta,
+            "code_provenance": "user_supplied",
+            "code_validation": code_validation,
             "series_points": len(numeric_rows),
             "note": "Not enough yearly numeric points to compute a baseline.",
         }
@@ -128,10 +202,9 @@ def run_surveillance_synthesis(
     else:
         method_key = f"custom_{method}_mean_of_{n_prior}_prior_years"
 
-    # DON: pull a wider net then filter (country name + ISO3; ISO3 uses word-boundary match)
     recent = don.list_recent(limit=40)
     country_name = str(cc.get("name") or "")
-    country_hints = [h for h in (country_name, iso3) if h]
+    country_hints = country_text_hints(iso3, country_name)
     matched = filter_outbreak_rows(recent, disease_q, country_hints=country_hints)
     top = [outbreak_summary_row(r) for r in matched[:5]]
 
@@ -198,6 +271,8 @@ def run_surveillance_synthesis(
         "contextual_alert": alert,
         "country_resolution": cc,
         "indicator": meta,
+        "code_provenance": "user_supplied",
+        "code_validation": code_validation,
         "latest": latest_payload,
         "baseline": {
             "method": method_key,
@@ -287,107 +362,32 @@ def run_compare_gho_countries(
     return out
 
 
-# --- Vulnerability index (heuristic; not an official WHO index) ---
+# --- INFORM Risk Index passthrough (HDX HAPI) ----------------------------------------
+# We stopped computing a homegrown vulnerability composite. The tool now fetches the
+# published INFORM Risk Index (UN OCHA / EC JRC) for a country via HDX HAPI and
+# returns its scores as-is, so consumers see a peer-reviewed methodology instead of
+# our own weights. INFORM is updated twice yearly.
 
-_VULN_INDICATORS: list[dict[str, Any]] = [
-    {
-        "id": "immunization_dtp3",
-        "label": "DTP3 immunization coverage among 1-year-olds (%)",
-        "code": "WHS4_100",
-        "higher_is_better": True,
-        "invert": False,
-    },
-    {
-        "id": "immunization_pol3",
-        "label": "Polio (Pol3) immunization coverage among 1-year-olds (%)",
-        "code": "WHS4_544",
-        "higher_is_better": True,
-        "invert": False,
-    },
-    {
-        "id": "hospital_beds_per_10k",
-        "label": "Hospital beds (per 10 000 population)",
-        "code": "WHS6_102",
-        "higher_is_better": True,
-        "invert": False,
-    },
-    {
-        "id": "diarrhoea_attributable_to_water",
-        "label": "Attributable fraction of diarrhoea to inadequate water",
-        "code": "WSH_20_WAT",
-        "higher_is_better": False,
-        "invert": False,
-    },
-]
+_INFORM_LINKS = {
+    "methodology": "https://drmkc.jrc.ec.europa.eu/inform-index/INFORM-Risk/Methodology",
+    "dataset": "https://data.humdata.org/dataset/inform-risk-index",
+    "api_endpoint": "https://hapi.humdata.org/api/v1/coordination-context/national-risk",
+}
 
 
-def _scale_to_score(
-    value: float,
-    lo: float | None,
-    hi: float | None,
-    *,
-    higher_is_better: bool,
-) -> float | None:
-    if lo is None or hi is None or hi == lo:
-        return None
-    t = (value - lo) / (hi - lo)
-    t = max(0.0, min(1.0, t))
-    if not higher_is_better:
-        t = 1.0 - t
-    return round(100.0 * t, 2)
-
-
-def _vuln_one_component(
-    gho: GhoClient,
-    iso3: str,
-    spec: dict[str, Any],
-) -> dict[str, Any]:
-    code = spec["code"]
-    latest = gho.latest_value_for_country(code, iso3)
-    if not latest or latest.get("numeric_value") is None:
-        return {
-            "id": spec["id"],
-            "label": spec["label"],
-            "code": code,
-            "missing": True,
-        }
-    val = float(latest["numeric_value"])  # type: ignore[arg-type]
-    cy = latest.get("year")
-    if cy is not None:
-        year_for_bounds = int(cy)
-    else:
-        dyn = gho.latest_year_with_country_data(code)
-        if dyn is None:
-            return {
-                "id": spec["id"],
-                "label": spec["label"],
-                "code": code,
-                "missing": True,
-                "missing_reason": "no_country_year_anchor",
-            }
-        year_for_bounds = dyn
-    lo, hi = gho.numeric_bounds_for_country_year(code, year_for_bounds)
-    scr = _scale_to_score(val, lo, hi, higher_is_better=bool(spec["higher_is_better"]))
+def _inform_scores_payload(row: dict[str, Any]) -> dict[str, Any]:
     return {
-        "id": spec["id"],
-        "label": spec["label"],
-        "code": code,
-        "year_used_for_global_bounds": year_for_bounds,
-        "global_min": lo,
-        "global_max": hi,
-        "country_latest_year": latest.get("year"),
-        "country_value": val,
-        "component_score_0_100": scr,
-        "missing": False,
+        "overall_risk_0_10": row.get("overall_risk"),
+        "hazard_exposure_risk_0_10": row.get("hazard_exposure_risk"),
+        "vulnerability_risk_0_10": row.get("vulnerability_risk"),
+        "coping_capacity_risk_0_10": row.get("coping_capacity_risk"),
+        "risk_class": row.get("risk_class"),
+        "global_rank": row.get("global_rank"),
     }
 
 
-_VULN_MIN_COMPONENTS_FOR_OVERALL = 2
-
-
-def compute_spatial_vulnerability_index(gho: GhoClient, country: str) -> dict[str, Any]:
-    """Heuristic 0-100 score (higher = more resilient / lower vulnerability for most components)."""
-
+def fetch_inform_risk_index(gho: GhoClient, hdx: Any, country: str) -> dict[str, Any]:
+    """Return the latest INFORM Risk Index row for a country, with metadata."""
     cc = resolve_country(gho, country)
     if not cc.get("ok"):
         return {"status": "needs_country", "country_resolution": cc}
@@ -395,36 +395,42 @@ def compute_spatial_vulnerability_index(gho: GhoClient, country: str) -> dict[st
     iso3 = str(cc.get("iso3"))
     name = str(cc.get("name"))
 
-    components: list[dict[str, Any]] = []
-    scores: list[float] = []
-
-    with ThreadPoolExecutor(max_workers=4) as ex:
-        futs = {
-            ex.submit(_vuln_one_component, gho, iso3, spec): spec["id"]
-            for spec in _VULN_INDICATORS
+    try:
+        row = hdx.get_inform_national_risk(iso3)
+    except RuntimeError as e:
+        return {
+            "status": "needs_config",
+            "error": str(e),
+            "country": {"iso3": iso3, "name": name},
+            "links": _INFORM_LINKS,
         }
-        for fut in as_completed(futs):
-            entry = fut.result()
-            components.append(entry)
-            if entry.get("component_score_0_100") is not None:
-                scores.append(float(entry["component_score_0_100"]))
 
-    components.sort(key=lambda x: x.get("id") or "")
-
-    overall: float | None
-    if len(scores) >= _VULN_MIN_COMPONENTS_FOR_OVERALL:
-        overall = round(sum(scores) / len(scores), 2)
-    else:
-        overall = None
+    if not row:
+        return {
+            "status": "no_data",
+            "country": {"iso3": iso3, "name": name},
+            "links": _INFORM_LINKS,
+            "note": "INFORM Risk Index has no published row for this country in the current release.",
+        }
 
     return {
         "status": "ok",
-        "disclaimer": "Heuristic composite score based on selected GHO indicators; not an official WHO index.",
         "country": {"iso3": iso3, "name": name},
-        "overall_resilience_score_0_100": overall,
-        "components_used_for_overall": len(scores),
-        "components_total": len(components),
-        "min_components_required_for_overall": _VULN_MIN_COMPONENTS_FOR_OVERALL,
-        "components": components,
-        "note": "Components fetched in parallel; outbound HTTP is rate-limited globally.",
+        "source": "INFORM Risk Index (UN OCHA / EC JRC) via HDX HAPI",
+        "license": "CC BY 4.0",
+        "scores": _inform_scores_payload(row),
+        "data_quality": {
+            "missing_indicators_pct": row.get("meta_missing_indicators_pct"),
+            "average_recentness_years": row.get("meta_avg_recentness_years"),
+        },
+        "reference_period": {
+            "start": row.get("reference_period_start"),
+            "end": row.get("reference_period_end"),
+        },
+        "resource_hdx_id": row.get("resource_hdx_id"),
+        "links": _INFORM_LINKS,
+        "note": (
+            "INFORM combines 50+ indicators across hazard & exposure, vulnerability, and lack "
+            "of coping capacity. Scores run 0 (lowest risk) to 10 (highest)."
+        ),
     }

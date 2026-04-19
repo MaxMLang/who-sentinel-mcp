@@ -10,7 +10,7 @@ A small [Model Context Protocol](https://modelcontextprotocol.io/) server that l
 > **Not affiliated with the World Health Organization.** This is an independent open-source project that consumes WHO's public APIs. WHO content is used under [CC BY 4.0](https://www.who.int/data/gho/publications/licensing) and every tool response carries an attribution line.
 
 <p align="center">
-  <img src="docs/architecture.svg" alt="An MCP host calls who-sentinel-mcp tools over stdio; the server caches and rate-limits requests to the WHO GHO and DON public APIs and returns JSON with a CC BY 4.0 attribution line." width="780">
+  <img src="docs/architecture.svg" alt="An MCP host calls who-sentinel-mcp tools over stdio; the server caches and rate-limits requests to WHO GHO, WHO DON, and HDX HAPI (INFORM Risk Index) and returns JSON with a CC BY 4.0 attribution line." width="780">
 </p>
 
 ## Why
@@ -21,7 +21,8 @@ Asking an LLM about an outbreak in country *X* tends to produce confident-soundi
 - pull the country's actual GHO timeseries,
 - compare the latest value against a prior-years baseline,
 - surface recent DON items with a real public URL,
-- pull regex/heuristic case-and-CFR hints out of DON narratives — with confidence flags so the model knows when not to quote them.
+- pull regex/heuristic case-and-CFR hints out of DON narratives — with confidence flags so the model knows when not to quote them,
+- read the published INFORM Risk Index for a country (UN OCHA / EC JRC, via HDX HAPI) instead of inventing a composite.
 
 Intended for **research, teaching, and desk analysis**.
 
@@ -74,9 +75,9 @@ docker run -i --rm who-sentinel-mcp
 | `get_latest_outbreaks` | Recent DON items, optional disease keyword filter. |
 | `get_full_report` | Full DON record by `Id`, plus `public_url`. |
 | `extract_outbreak_metadata` | Regex/heuristic case & CFR hints from DON text. |
-| `surveillance_synthesis` | DON narrative + GHO baseline for one disease/country. |
+| `surveillance_synthesis` | DON narrative + GHO baseline for one disease/country. Refuses by default if the picked `IndicatorCode` shares no keywords with the disease query (`code_validation`); pass `confirm_indicator=true` to override. |
 | `compare_gho_countries` | Same indicator across two countries. |
-| `spatial_vulnerability_index` | Heuristic 0–100 composite from a few GHO indicators. |
+| `country_risk_index` | Latest INFORM Risk Index scores (UN OCHA / EC JRC, via [HDX HAPI](https://hapi.humdata.org/)) for a country. |
 | `get_server_limits` | Effective cache TTLs, rate-limit budget, in-process metrics. |
 
 Resources (for agent context):
@@ -98,6 +99,8 @@ Prompt: `who_sentinel_workflow` — a short suggested workflow for agents.
 | `WHO_SENTINEL_GHO_BASE` | `https://ghoapi.azureedge.net/api` | GHO OData base URL. |
 | `WHO_SENTINEL_DON_BASE` | `https://www.who.int/api/news/diseaseoutbreaknews` | DON OData base URL. |
 | `WHO_SENTINEL_WHO_WEB_BASE` | `https://www.who.int` | Base used when building DON `public_url`s. |
+| `WHO_SENTINEL_HDX_HAPI_BASE` | `https://hapi.humdata.org` | HDX HAPI base URL for `country_risk_index`. |
+| `WHO_SENTINEL_HDX_APP_ID` | _(unset)_ | Required for `country_risk_index`. Generate one at the [HAPI sandbox](https://hapi.humdata.org/docs#/Utility/get_encoded_identifier_api_v1_encode_identifier_get). |
 
 GETs retry on `408, 429, 502, 503, 504` with exponential backoff and respect `Retry-After`.
 
@@ -112,11 +115,11 @@ GETs retry on `408, 429, 502, 503, 504` with exponential backoff and respect `Re
 
 ## Limitations
 
-- GHO uses **per-indicator** entity sets — the wrong `IndicatorCode` quietly produces the wrong baseline. Confirm codes via `search_gho_indicators` and `list_gho_indicator_dimensions`.
-- Curated disease hints are starting points, not authoritative.
-- DON country matching is text-based (ISO3 word-boundary, names normalized substring); narratives may use subnational place names.
+- GHO uses **per-indicator** entity sets. `surveillance_synthesis` adds a `code_validation` field and refuses by default when the IndicatorName shares no keywords with the disease query, but a high-confidence pick can still be wrong — `code_provenance` shows where the code came from; verify via `search_gho_indicators` and `list_gho_indicator_dimensions`.
+- Disease hints come from `data/disease_hints.json` — a small editorial overlay merged with an auto-generated snapshot of the live GHO `Indicator` catalog (refreshed weekly by `scripts/refresh_disease_hints.py`). Still starting points, not authoritative.
+- DON country matching is text-based. We expand each country into pycountry names + an alias overlay (e.g. `DRC`, `Burma`, `Côte d'Ivoire`), and ISO3 codes use word boundaries, but narratives can still use subnational place names.
 - `extract_outbreak_metadata` uses regex heuristics. Inspect `confidence` and `cfr_source` (`explicit_text` vs `derived_or_none`) before quoting numbers.
-- `spatial_vulnerability_index` is a small heuristic composite; treat it as a sketch, not a score.
+- `country_risk_index` is a thin passthrough of the published INFORM Risk Index (CC BY 4.0); we don't compute composites of our own. Set `WHO_SENTINEL_HDX_APP_ID` to enable it.
 
 ## Development
 

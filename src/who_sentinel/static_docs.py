@@ -38,9 +38,10 @@ LIMITATIONS = """\
 
 - **Not** a clinical or public-health decision system; research / exploration only.
 - GHO coverage varies by indicator and country; **missing years** are common.
-- DON matching is **text-based**; narratives may omit ISO3 or use subnational place names.
-- **spatial_vulnerability_index** is a heuristic composite, not an official WHO index.
-- Respect WHO services: cache-friendly access; avoid tight polling loops.
+- `surveillance_synthesis` validates that the chosen `IndicatorCode` shares keywords with the disease query (`code_validation`) and reports `code_provenance`. It refuses by default on no overlap; pass `confirm_indicator=true` to override.
+- DON matching is **text-based**. Country hints are expanded with pycountry and a small alias overlay, but narratives may still use subnational place names.
+- `country_risk_index` returns the **published INFORM Risk Index** (UN OCHA / EC JRC) via HDX HAPI; we don't compute composites of our own. Requires `WHO_SENTINEL_HDX_APP_ID`.
+- Respect WHO and HDX services: cache-friendly access; avoid tight polling loops.
 
-Data: WHO (CC BY 4.0).
+Data: WHO (CC BY 4.0); INFORM Risk Index (CC BY 4.0).
 """

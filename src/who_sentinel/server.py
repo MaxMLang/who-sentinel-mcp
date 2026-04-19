@@ -21,6 +21,7 @@ from who_sentinel.clients.don import (
     outbreak_summary_row,
 )
 from who_sentinel.clients.gho import GhoClient
+from who_sentinel.clients.hdx import HdxHapiClient
 from who_sentinel.constants import (
     ATTRIBUTION_PREFIX,
     GHO_MAX_TOP,
@@ -33,7 +34,7 @@ from who_sentinel.extract import extract_result_to_dict
 from who_sentinel.logging_config import configure_logging
 from who_sentinel.rate_limit import http_budget_per_minute
 from who_sentinel.sentinel import (
-    compute_spatial_vulnerability_index,
+    fetch_inform_risk_index,
     run_compare_gho_countries,
     run_surveillance_synthesis,
 )
@@ -42,9 +43,11 @@ from who_sentinel.static_docs import GHO_BASICS, LIMITATIONS, TRUST_AND_USE
 _cache = TTLCache()
 _gho = GhoClient(cache=_cache)
 _don = DonClient()
+_hdx = HdxHapiClient()
 
 atexit.register(_gho.close)
 atexit.register(_don.close)
+atexit.register(_hdx.close)
 
 _log = logging.getLogger("who_sentinel")
 
@@ -258,8 +261,9 @@ def surveillance_synthesis(
     indicator_code: str | None = None,
     prior_years_for_baseline: int | None = None,
     baseline_latest_year: int | None = None,
+    confirm_indicator: bool = False,
 ) -> str:
-    """Research-oriented DON + GHO synthesis (not outbreak response or clinical use); verify IndicatorCode against GHO metadata."""
+    """Research-oriented DON + GHO synthesis (not outbreak response or clinical use). Refuses by default if IndicatorName has no keyword overlap with the disease query; pass confirm_indicator=True to override."""
 
     def _inner() -> str:
         try:
@@ -271,6 +275,7 @@ def surveillance_synthesis(
                 indicator_code,
                 prior_years_for_baseline=prior_years_for_baseline,
                 baseline_latest_year=baseline_latest_year,
+                confirm_indicator=confirm_indicator,
             )
             return _json_out(out)
         except Exception as e:  # noqa: BLE001
@@ -344,17 +349,17 @@ def extract_outbreak_metadata(don_id: str) -> str:
 
 
 @mcp.tool()
-def spatial_vulnerability_index(country: str) -> str:
-    """Heuristic composite score from a few GHO indicators—not an official WHO index; not for individual or clinical decisions."""
+def country_risk_index(country: str) -> str:
+    """Latest INFORM Risk Index scores (UN OCHA / EC JRC, via HDX HAPI) for a country. Requires WHO_SENTINEL_HDX_APP_ID; not for individual or clinical decisions."""
 
     def _inner() -> str:
         try:
-            out = compute_spatial_vulnerability_index(_gho, country)
+            out = fetch_inform_risk_index(_gho, _hdx, country)
             return _json_out(out)
         except Exception as e:  # noqa: BLE001
             return _err_out(e)
 
-    return _run_tool("spatial_vulnerability_index", _inner)
+    return _run_tool("country_risk_index", _inner)
 
 
 @mcp.prompt(name="who_sentinel_workflow", description="Recommended steps for disease surveillance with this MCP")
@@ -369,7 +374,7 @@ def who_sentinel_workflow() -> list[dict[str, Any]]:
         "4) Use get_latest_outbreaks / get_full_report for DON narrative; extract_outbreak_metadata for numeric hints.\n"
         "5) compare_gho_countries for two-country indicator comparison; list_gho_indicator_dimensions for COUNTRY/YEAR.\n"
         "6) get_server_limits and resources who-sentinel://docs/* (including trust-and-use) for limits and policy context.\n"
-        "7) spatial_vulnerability_index is a heuristic composite—not an official WHO score.\n"
+        "7) country_risk_index returns the published INFORM Risk Index for a country (HDX HAPI; CC BY 4.0).\n"
         "Outputs are prefixed with WHO data attribution; this is not clinical advice."
     )
     return [{"role": "user", "content": {"type": "text", "text": text}}]

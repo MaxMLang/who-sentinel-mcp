@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from who_sentinel.country_aliases import ALIASES_TO_ISO3, norm_alias
+from who_sentinel.country_aliases import iso3_for_alias
 from who_sentinel.clients.gho import GhoClient
 
 
@@ -81,9 +81,8 @@ def resolve_country(gho: GhoClient, country: str) -> dict[str, Any]:
         gho.cache.set(cache_key, out)
         return out
 
-    # 2) Curated aliases → ISO3 (only if present in this GHO table)
-    alias_key = norm_alias(raw)
-    iso_from_alias = ALIASES_TO_ISO3.get(alias_key)
+    # 2) pycountry + small overlay (only accept if WHO RegionCountry actually has the ISO3)
+    iso_from_alias = iso3_for_alias(raw)
     if iso_from_alias and iso_from_alias in by_code:
         out = _ok(by_code[iso_from_alias])
         gho.cache.set(cache_key, out)

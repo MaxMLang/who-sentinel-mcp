@@ -27,6 +27,7 @@ RESPONSE_DISCLAIMER_SHORT = (
 GHO_BASE = "https://ghoapi.azureedge.net/api"
 DON_BASE = "https://www.who.int/api/news/diseaseoutbreaknews"
 WHO_WEB_BASE = "https://www.who.int"
+HDX_HAPI_BASE = "https://hapi.humdata.org"
 
 # OData max $top observed on GHO
 GHO_MAX_TOP = 1000
@@ -51,3 +52,8 @@ def don_base_url() -> str:
 def who_web_base_url() -> str:
     """Effective www.who.int browse base URL (env-overridable)."""
     return os.environ.get("WHO_SENTINEL_WHO_WEB_BASE", WHO_WEB_BASE)
+
+
+def hdx_hapi_base_url() -> str:
+    """Effective HDX HAPI base URL (env-overridable for testing/mirrors)."""
+    return os.environ.get("WHO_SENTINEL_HDX_HAPI_BASE", HDX_HAPI_BASE)
