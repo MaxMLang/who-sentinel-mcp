@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 460" role="img"
+     aria-labelledby="title desc" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title id="title">who-sentinel-mcp architecture</title>
+  <desc id="desc">An MCP host calls who-sentinel-mcp tools over stdio. The server caches and rate-limits requests to the WHO GHO and DON public APIs and returns JSON with a CC BY 4.0 attribution line.</desc>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4b5563"/>
+    </marker>
+    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.08"/>
+    </filter>
+    <style><![CDATA[
+      .card     { fill: #ffffff; stroke: #d4d4d8; stroke-width: 1; }
+      .card-mcp { fill: #f5f3ff; stroke: #c4b5fd; }
+      .card-who { fill: #ecfeff; stroke: #67e8f9; }
+      .heading  { font-size: 16px; font-weight: 600; fill: #111827; }
+      .sub      { font-size: 12px; fill: #4b5563; }
+      .pill     { fill: #f3f4f6; stroke: #e5e7eb; }
+      .pill-txt { font-size: 11px; fill: #374151; }
+      .edge     { stroke: #4b5563; stroke-width: 1.5; fill: none; }
+      .edge-lbl { font-size: 11px; fill: #4b5563; }
+      .footer   { font-size: 11px; fill: #6b7280; }
+      .badge    { font-size: 10px; font-weight: 600; fill: #4338ca; letter-spacing: 0.5px; }
+    ]]></style>
+  </defs>
+
+  <!-- LEFT: MCP Host -->
+  <g filter="url(#cardShadow)">
+    <rect x="30"  y="120" width="180" height="160" rx="14" class="card card-mcp"/>
+  </g>
+  <text x="120" y="150" text-anchor="middle" class="heading">MCP Host</text>
+  <text x="120" y="170" text-anchor="middle" class="sub">LLM agent</text>
+  <rect x="50"  y="190" width="140" height="22" rx="6" class="pill"/>
+  <text x="120" y="205" text-anchor="middle" class="pill-txt">Cursor</text>
+  <rect x="50"  y="218" width="140" height="22" rx="6" class="pill"/>
+  <text x="120" y="233" text-anchor="middle" class="pill-txt">Claude Desktop</text>
+  <rect x="50"  y="246" width="140" height="22" rx="6" class="pill"/>
+  <text x="120" y="261" text-anchor="middle" class="pill-txt">any MCP client</text>
+
+  <!-- MIDDLE: who-sentinel-mcp server -->
+  <g filter="url(#cardShadow)">
+    <rect x="290" y="60"  width="300" height="340" rx="14" class="card"/>
+  </g>
+  <text x="440" y="92"  text-anchor="middle" class="heading">who-sentinel-mcp</text>
+  <text x="440" y="110" text-anchor="middle" class="sub">FastMCP server &#8226; stdio transport</text>
+
+  <!-- Tools section -->
+  <text x="310" y="138" class="badge">TOOLS</text>
+  <rect x="310" y="146" width="120" height="22" rx="6" class="pill"/>
+  <text x="370" y="161" text-anchor="middle" class="pill-txt">surveillance_synthesis</text>
+  <rect x="438" y="146" width="132" height="22" rx="6" class="pill"/>
+  <text x="504" y="161" text-anchor="middle" class="pill-txt">extract_outbreak_metadata</text>
+
+  <rect x="310" y="174" width="120" height="22" rx="6" class="pill"/>
+  <text x="370" y="189" text-anchor="middle" class="pill-txt">search_gho_indicators</text>
+  <rect x="438" y="174" width="132" height="22" rx="6" class="pill"/>
+  <text x="504" y="189" text-anchor="middle" class="pill-txt">get_latest_outbreaks</text>
+
+  <rect x="310" y="202" width="120" height="22" rx="6" class="pill"/>
+  <text x="370" y="217" text-anchor="middle" class="pill-txt">compare_gho_countries</text>
+  <rect x="438" y="202" width="132" height="22" rx="6" class="pill"/>
+  <text x="504" y="217" text-anchor="middle" class="pill-txt">spatial_vulnerability_index</text>
+
+  <!-- Middleware section -->
+  <text x="310" y="252" class="badge">MIDDLEWARE</text>
+  <rect x="310" y="260" width="80"  height="28" rx="6" class="pill"/>
+  <text x="350" y="278" text-anchor="middle" class="pill-txt">TTL cache</text>
+  <rect x="398" y="260" width="80"  height="28" rx="6" class="pill"/>
+  <text x="438" y="278" text-anchor="middle" class="pill-txt">rate limit</text>
+  <rect x="486" y="260" width="84"  height="28" rx="6" class="pill"/>
+  <text x="528" y="278" text-anchor="middle" class="pill-txt">retry / backoff</text>
+
+  <!-- Output section -->
+  <text x="310" y="318" class="badge">RESPONSE</text>
+  <rect x="310" y="326" width="260" height="50" rx="8" class="pill"/>
+  <text x="440" y="345" text-anchor="middle" class="pill-txt">JSON payload + evidence snippets</text>
+  <text x="440" y="361" text-anchor="middle" class="pill-txt">who_sentinel_meta &#8226; CC BY 4.0 attribution</text>
+
+  <!-- RIGHT: WHO public APIs -->
+  <g filter="url(#cardShadow)">
+    <rect x="670" y="90"  width="180" height="130" rx="14" class="card card-who"/>
+  </g>
+  <text x="760" y="118" text-anchor="middle" class="heading">WHO GHO</text>
+  <text x="760" y="136" text-anchor="middle" class="sub">OData &#8226; public</text>
+  <rect x="690" y="150" width="140" height="22" rx="6" class="pill"/>
+  <text x="760" y="165" text-anchor="middle" class="pill-txt">indicator timeseries</text>
+  <rect x="690" y="178" width="140" height="22" rx="6" class="pill"/>
+  <text x="760" y="193" text-anchor="middle" class="pill-txt">country / dimensions</text>
+
+  <g filter="url(#cardShadow)">
+    <rect x="670" y="240" width="180" height="130" rx="14" class="card card-who"/>
+  </g>
+  <text x="760" y="268" text-anchor="middle" class="heading">WHO DON</text>
+  <text x="760" y="286" text-anchor="middle" class="sub">OData &#8226; public</text>
+  <rect x="690" y="300" width="140" height="22" rx="6" class="pill"/>
+  <text x="760" y="315" text-anchor="middle" class="pill-txt">outbreak news items</text>
+  <rect x="690" y="328" width="140" height="22" rx="6" class="pill"/>
+  <text x="760" y="343" text-anchor="middle" class="pill-txt">narrative HTML</text>
+
+  <!-- Edges: host <-> server -->
+  <path d="M 210 188 H 290" class="edge" marker-end="url(#arrow)"/>
+  <text x="250" y="180" text-anchor="middle" class="edge-lbl">tool call (MCP / stdio)</text>
+
+  <path d="M 290 230 H 210" class="edge" marker-end="url(#arrow)"/>
+  <text x="250" y="222" text-anchor="middle" class="edge-lbl">JSON result</text>
+
+  <!-- Edges: server <-> WHO -->
+  <path d="M 590 170 H 670" class="edge" marker-end="url(#arrow)"/>
+  <text x="630" y="162" text-anchor="middle" class="edge-lbl">HTTPS &#8226; OData GET</text>
+
+  <path d="M 670 305 H 590" class="edge" marker-end="url(#arrow)"/>
+  <text x="630" y="297" text-anchor="middle" class="edge-lbl">cached + retried</text>
+
+  <!-- Footer -->
+  <text x="440" y="430" text-anchor="middle" class="footer">
+    Independent open-source project &#8226; not affiliated with the World Health Organization
+  </text>
+</svg>

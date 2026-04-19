@@ -1,0 +1,10 @@
+{
+  "@odata.context": "https://ghoapi.azureedge.net/api/$metadata#Indicator",
+  "value": [
+    {
+      "IndicatorCode": "WHS4_100",
+      "IndicatorName": "Diphtheria tetanus toxoid and pertussis (DTP3) immunization coverage among 1-year-olds (%)",
+      "Language": "EN"
+    }
+  ]
+}
