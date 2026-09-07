@@ -1,13 +1,18 @@
 {
-  "generated_at": null,
+  "generated_at": "2026-09-07T09:21:12+00:00",
   "source": "https://ghoapi.azureedge.net/api/Indicator",
   "note": "Curated overlay is editorial; auto_generated is refreshed weekly by scripts/refresh_disease_hints.py.",
   "topics": [
     {
       "id": "cholera",
-      "keywords": ["cholera", "v. cholerae"],
+      "keywords": [
+        "cholera",
+        "v. cholerae"
+      ],
       "word_keywords": [],
-      "search_queries": ["cholera"],
+      "search_queries": [
+        "cholera"
+      ],
       "curated": [
         {
           "code": "CHOLERA_0000000001",
@@ -20,13 +25,27 @@
           "verify_with_indicator_name": "Confirm CFR definition in GHO metadata for this code."
         }
       ],
-      "auto_generated": []
+      "auto_generated": [
+        {
+          "code": "WHS3_40",
+          "name": "Cholera - number of reported cases"
+        },
+        {
+          "code": "CHOLERA_0000000002",
+          "name": "Number of reported deaths from cholera"
+        }
+      ]
     },
     {
       "id": "malaria",
-      "keywords": ["malaria", "plasmodium"],
+      "keywords": [
+        "malaria",
+        "plasmodium"
+      ],
       "word_keywords": [],
-      "search_queries": ["malaria"],
+      "search_queries": [
+        "malaria"
+      ],
       "curated": [
         {
           "code": "MALARIA_CONF_CASES",
@@ -37,39 +56,264 @@
           "rationale": "Malaria cases treated with first-line courses (incl. ACTs)"
         }
       ],
-      "auto_generated": []
+      "auto_generated": [
+        {
+          "code": "MDG_0000000014",
+          "name": "Children aged <5 years with fever who received treatment with any antimalarial (%)"
+        },
+        {
+          "code": "MDG_0000000016",
+          "name": "Deaths due to malaria (per 100 000 population)"
+        },
+        {
+          "code": "WHS2_152",
+          "name": "Deaths due to malaria (per 100 000 population)"
+        },
+        {
+          "code": "WHS2_164",
+          "name": "Distribution of causes of death among children aged <5 years (%) - Malaria"
+        },
+        {
+          "code": "MALARIA_NMCP_CALCULATIONS",
+          "name": "Domestic Expenditure on Malaria"
+        },
+        {
+          "code": "MALARIA_EST_INCIDENCE",
+          "name": "Estimated malaria incidence (per 1000 population at risk)"
+        },
+        {
+          "code": "MALARIA_EST_MORTALITY",
+          "name": "Estimated malaria mortality rate (per 100 000 population)"
+        },
+        {
+          "code": "MALARIA_EST_CASES",
+          "name": "Estimated number of malaria cases"
+        },
+        {
+          "code": "MALARIA002",
+          "name": "Estimated number of malaria cases"
+        },
+        {
+          "code": "MALARIA_EST_DEATHS",
+          "name": "Estimated number of malaria deaths"
+        },
+        {
+          "code": "MALARIA003",
+          "name": "Estimated number of malaria deaths"
+        },
+        {
+          "code": "WHS3_48",
+          "name": "Malaria - number of reported confirmed cases"
+        },
+        {
+          "code": "MALARIA001",
+          "name": "Malaria - number of reported deaths"
+        },
+        {
+          "code": "SDGMALARIA",
+          "name": "Malaria incidence (per 1 000 population at risk)"
+        },
+        {
+          "code": "MALARIA005",
+          "name": "Malaria incidence per 100 000 population"
+        },
+        {
+          "code": "MALARIA_ITN_USE",
+          "name": "Malaria ITN use: Population in malaria-endemic areas who slept under an insecticide-treated bed net (ITN) the previous night (%)"
+        },
+        {
+          "code": "MALARIA_IMPORTED",
+          "name": "Number of imported malaria cases"
+        },
+        {
+          "code": "MALARIA_INDIG",
+          "name": "Number of indigenous malaria cases"
+        },
+        {
+          "code": "MALARIA_PF_INDIG",
+          "name": "Number of indigenous P. falciparum malaria cases"
+        },
+        {
+          "code": "MALARIA_PV_INDIG",
+          "name": "Number of indigenous P. vivax malaria cases"
+        },
+        {
+          "code": "MALARIA_ACT_TREATED",
+          "name": "Number of malaria cases treated with artemisinin-based combination therapies (ACTs)"
+        },
+        {
+          "code": "MALARIA_MICR_POS",
+          "name": "Number of malaria positive cases by microscopy"
+        },
+        {
+          "code": "MALARIA_RDT_POS",
+          "name": "Number of malaria positive cases by rapid diagnostic test (RDT)"
+        }
+      ]
     },
     {
       "id": "measles",
-      "keywords": ["measles", "rubeola"],
+      "keywords": [
+        "measles",
+        "rubeola"
+      ],
       "word_keywords": [],
-      "search_queries": ["measles"],
+      "search_queries": [
+        "measles"
+      ],
       "curated": [
         {
           "code": "mslv",
           "rationale": "Measles immunization coverage among one-year-olds (%)"
         }
       ],
-      "auto_generated": []
+      "auto_generated": [
+        {
+          "code": "WHS2_168",
+          "name": "Distribution of causes of death among children aged <5 years (%) - Measles"
+        },
+        {
+          "code": "WHS3_62",
+          "name": "Measles - number of reported cases"
+        },
+        {
+          "code": "WHS8_110",
+          "name": "Measles-containing-vaccine first-dose (MCV1) immunization coverage among 1-year-olds (%) (WUENIC)"
+        },
+        {
+          "code": "MCV2",
+          "name": "Measles-containing-vaccine second-dose (MCV2) immunization coverage by the locally recommended age (%) (WUENIC)"
+        }
+      ]
     },
     {
       "id": "tuberculosis",
-      "keywords": ["tuberculosis"],
-      "word_keywords": ["tb"],
-      "search_queries": ["tuberculosis"],
+      "keywords": [
+        "tuberculosis"
+      ],
+      "word_keywords": [
+        "tb"
+      ],
+      "search_queries": [
+        "tuberculosis"
+      ],
       "curated": [
         {
           "code": "MDG_0000000020",
           "rationale": "Incidence of tuberculosis (per 100 000 population per year)"
         }
       ],
-      "auto_generated": []
+      "auto_generated": [
+        {
+          "code": "MDG_0000000017",
+          "name": "Deaths due to tuberculosis among HIV-negative people (per 100 000 population)"
+        },
+        {
+          "code": "MDG_0000000018",
+          "name": "Deaths due to tuberculosis among HIV-positive people (per 100 000 population)"
+        },
+        {
+          "code": "TB_e_inc_tbhiv_100k",
+          "name": "Incidence of tuberculosis (per 100 000 population) (HIV-positive cases)"
+        },
+        {
+          "code": "TB_c_lab_cul_5m",
+          "name": "Laboratories providing tuberculosis diagnostic services using culture (per 5 million population)"
+        },
+        {
+          "code": "TB_c_lab_sm_100k",
+          "name": "Laboratories providing tuberculosis diagnostic services using sputum smear microscopy (per 100 000 population)"
+        },
+        {
+          "code": "TB_e_mort_exc_tbhiv_num",
+          "name": "Number of deaths due to tuberculosis, excluding HIV"
+        },
+        {
+          "code": "TB_e_inc_num",
+          "name": "Number of incident tuberculosis cases"
+        },
+        {
+          "code": "TB_e_inc_num_014",
+          "name": "Number of incident tuberculosis cases in children aged 0 - 14"
+        },
+        {
+          "code": "TB_e_inc_tbhiv_num",
+          "name": "Number of incident tuberculosis cases,  (HIV-positive cases)"
+        },
+        {
+          "code": "TB_e_prev_num",
+          "name": "Number of prevalent tuberculosis cases"
+        },
+        {
+          "code": "WHS3_522",
+          "name": "Number of reported cases of tuberculosis"
+        },
+        {
+          "code": "WHS3_54",
+          "name": "Number of reported cases of tuberculosis (DOTS)"
+        },
+        {
+          "code": "MDG_0000000023",
+          "name": "Prevalence of tuberculosis (per 100 000 population)"
+        },
+        {
+          "code": "MDG_0000000030",
+          "name": "Smear-positive tuberculosis case-detection rate (%)"
+        },
+        {
+          "code": "MDG_0000000031",
+          "name": "Smear-positive tuberculosis treatment-success rate (%)"
+        },
+        {
+          "code": "TB_Notification_agesex_num",
+          "name": "The number of new and relapse cases of tuberculosis detected in a given year by age and sex"
+        },
+        {
+          "code": "TB_c_new_snep_tsr",
+          "name": "Treatment success rate for new pulmonary smear-negative and extrapulmonary tuberculosis cases"
+        },
+        {
+          "code": "TB_c_newinc",
+          "name": "Tuberculosis - new and relapse cases"
+        },
+        {
+          "code": "TB_tot_newrel",
+          "name": "Tuberculosis - new and relapse cases"
+        },
+        {
+          "code": "UHC_TB_DT",
+          "name": "Tuberculosis detection and treatment"
+        },
+        {
+          "code": "MDG_0000000022",
+          "name": "Tuberculosis detection rate under DOTS (%)"
+        },
+        {
+          "code": "TB_effective_treatment_coverage",
+          "name": "Tuberculosis effective treatment coverage (%)"
+        },
+        {
+          "code": "TB_1",
+          "name": "Tuberculosis treatment coverage"
+        },
+        {
+          "code": "MDG_0000000024",
+          "name": "Tuberculosis treatment success under DOTS (%)"
+        }
+      ]
     },
     {
       "id": "influenza",
-      "keywords": ["influenza", "h5n1", "h7n9", "h1n1"],
+      "keywords": [
+        "influenza",
+        "h5n1",
+        "h7n9",
+        "h1n1"
+      ],
       "word_keywords": [],
-      "search_queries": ["influenza"],
+      "search_queries": [
+        "influenza"
+      ],
       "curated": [
         {
           "code": "WHS3_51",
